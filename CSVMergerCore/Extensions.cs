@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CSVMerger
+namespace CsvMerger
 {
     public static class EnumerableExtensions
     {
-        public static IEnumerable Odd(this IEnumerable collection)
+        public static List<List<T>> SplitList<T>(this List<T> input, int nSize)
         {
-            IEnumerable<object> output = new List<object>();
+            var list = new List<List<T>>();
+            for (int i = 0; i < input.Count; i += nSize)
+            {
+                list.Add(input.GetRange(i, Math.Min(nSize, input.Count - i)));
+            }
+            return list;
+        }
+        public static IEnumerable<T> Odd<T>(this IEnumerable<T> collection)
+        {
+            IEnumerable<T> output = new List<T>();
             var enumerator = collection.GetEnumerator();
             while (enumerator.MoveNext())
             {
@@ -22,9 +32,9 @@ namespace CSVMerger
             return output;
         }
 
-        public static IEnumerable Even(this IEnumerable collection)
+        public static IEnumerable<T> Even<T>(this IEnumerable<T> collection)
         {
-            IEnumerable<object> output = new List<object>();
+            IEnumerable<T> output = new List<T>();
             var enumerator = collection.GetEnumerator();
             enumerator.MoveNext();
             while (enumerator.MoveNext())
@@ -52,8 +62,9 @@ namespace CSVMerger
         public static string[] GetLines(this System.IO.StreamReader reader)
         {
             string content = reader.ReadToEnd();
-            string[] lines = content.Split("\r");
-            return lines.Where(s => s != "").Select(s => s.Replace("\n", "")).ToArray();
+            string[] lines = content.Split('\r');
+            return lines.Where(s => s.Replace("\n", "") != "").Select(s => s.Replace("\n", "")).ToArray();
         }
     }
+
 }
