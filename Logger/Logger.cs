@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Logger
 {
-    public class Logger : IDisposable
+    public class Logger
     {
         private object locker = new object();
         private List<LogEvent> _sessionEvents;
@@ -39,27 +39,10 @@ namespace Logger
         {
             Thread thread = new Thread(new ParameterizedThreadStart(LogObj));
             thread.Start(message);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            SessionEvents = null;
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-
+        }   
         public Logger()
         {
             _sessionEvents = new List<LogEvent>();
-        }
-        public virtual void SaveLog()
-        {
-
         }
 
     }

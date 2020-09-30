@@ -5,9 +5,9 @@ namespace Logger
 {
     public class FileLogger : Logger
     {
-        StreamWriter latestLogWriter;
-        StreamWriter currentLogWriter;
-        private bool disposedValue;
+        string currentLogFile;
+        string latestLogFile;
+        private bool IslatestCreated;
 
         protected override void Log(string message)
         {
@@ -15,8 +15,17 @@ namespace Logger
             {
                 base.Log(message);
                 string content = $"Time: {DateTime.Now}\r\nMessage: {message}";
-                currentLogWriter.WriteLine(content);
-                latestLogWriter.WriteLine(content);
+                FileStream latestLogStream = new FileStream(latestLogFile, IslatestCreated ? FileMode.Append : FileMode.Create, FileAccess.Write);
+                using (StreamWriter latestLogWriter = new StreamWriter(latestLogStream))
+                {
+                    latestLogWriter.WriteLine(content);
+                }
+                IslatestCreated = true;
+                FileStream currentLogStream = new FileStream(currentLogFile, FileMode.Append, FileAccess.Write);
+                using (StreamWriter currentLogWriter = new StreamWriter(currentLogStream))
+                {
+                    currentLogWriter.WriteLine(content);
+                }
             }
             catch (Exception ex)
             {
@@ -36,14 +45,10 @@ namespace Logger
             {
                 if (string.IsNullOrEmpty(LogFolderPath))
                     throw new Exception("Log folder is not initialized");
+                IslatestCreated = false;
+                currentLogFile = Path.Combine(LogFolderPath, $"{DateTime.Now:yyyy_MM_dd}.log");
+                latestLogFile = Path.Combine(LogFolderPath, "latest.log");
 
-                string currentLogFile = Path.Combine(LogFolderPath, $"{DateTime.Now:yyyy_MM_dd}.log");
-                FileStream currentLogStream = new FileStream(currentLogFile, FileMode.Append, FileAccess.Write);
-                currentLogWriter = new StreamWriter(currentLogStream);
-
-                string latestLogFile = Path.Combine(LogFolderPath, "latest.log");
-                FileStream latestLogStream = new FileStream(latestLogFile, FileMode.Create, FileAccess.Write);
-                latestLogWriter = new StreamWriter(latestLogStream);
             }
             catch (Exception ex)
             {
@@ -56,36 +61,6 @@ namespace Logger
                     }
                 }
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    currentLogWriter.BaseStream.Dispose();
-                    currentLogWriter.Dispose();
-                    latestLogWriter.BaseStream.Dispose();
-                    latestLogWriter.Dispose();
-                }
-                disposedValue = true;
-            }
-        }
-        public override void SaveLog()
-        {
-            string latestLogFile = ((FileStream)latestLogWriter.BaseStream).Name;
-            string currentLogFile = ((FileStream)latestLogWriter.BaseStream).Name;
-
-            latestLogWriter.BaseStream.Dispose();
-            var newLatestStream = new FileStream(latestLogFile, FileMode.Append, FileAccess.Write);
-            latestLogWriter.BaseStream.Dispose();
-            latestLogWriter = new StreamWriter(newLatestStream);
-            
-            currentLogWriter.BaseStream.Dispose();
-            var newCurrentStream = new FileStream(currentLogFile, FileMode.Append, FileAccess.Write);
-            currentLogWriter.Dispose();
-            currentLogWriter = new StreamWriter(newCurrentStream);
-        }
+        }  
     }
 }

@@ -17,14 +17,16 @@ namespace DVJUCSVConverterService
         public Installer1()
         {
             InitializeComponent();
-            serviceInstaller = new ServiceInstaller();
-            processInstaller = new ServiceProcessInstaller();
-
-            processInstaller.Account = ServiceAccount.LocalSystem;
-            serviceInstaller.StartType = ServiceStartMode.Manual;
-            serviceInstaller.ServiceName = "docAlpha_DocProf_Converter";
-            serviceInstaller.Description = "Prepares a merged *.csv and *.djvu files from docAlpha output csv and pdf files";
-            serviceInstaller.StartType = ServiceStartMode.Automatic;
+            serviceInstaller = new ServiceInstaller()
+            {
+                StartType = ServiceStartMode.Automatic,
+                ServiceName = "docAlpha_DocProf_Converter",
+                Description = "Prepares a merged *.csv and *.djvu files from docAlpha output csv and pdf files",
+            };
+            processInstaller = new ServiceProcessInstaller()
+            {
+                Account = ServiceAccount.LocalSystem
+            };
             Installers.Add(processInstaller);
             Installers.Add(serviceInstaller);
         }

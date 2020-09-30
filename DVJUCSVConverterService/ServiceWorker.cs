@@ -62,25 +62,16 @@ namespace DVJUCSVConverterService
                     LogWriter.LogMessage("Files to process: " + string.Join(",\r\n", files));
                     if (files.Count >= config.BatchSize)
                     {
-                        List<Task> tasks = new List<Task>();
-                        foreach (List<string> batch in files.SplitList(config.BatchSize).Where(w => config.TakeLess? w.Count() <= config.BatchSize : w.Count() == config.BatchSize))
+                        
+                        Parallel.ForEach(files.SplitList(config.BatchSize).Where(w => config.TakeLess ? w.Count() <= config.BatchSize : w.Count() == config.BatchSize), batch =>
                         {
-                            Task task = new Task(() => converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), config.DPI));
-                            tasks.Add(task);
-                            task.Start();
-                            try
+                            _token.Register(converter.Endloop);
+                            if (converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), config.DPI))
                             {
-                                task.Wait();
-                                if (task.IsCompleted)
-                                    processedFiles.AddRange(batch);
+                                processedFiles.AddRange(batch);
                                 Serializer.SerializeItem(processedFiles, config.ProcessedCSVs);
                             }
-                            catch (Exception)
-                            {
-                                LogWriter.LogMessage(task.Exception.Message + "\r\n" + task.Exception.InnerException.Message + "\r\n" + task.Exception.InnerException.StackTrace);
-                            }
-                        }
-                        Task.WaitAll(tasks.ToArray());
+                        });
                     }
                     else
                     {
