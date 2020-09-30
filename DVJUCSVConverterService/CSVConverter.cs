@@ -31,9 +31,11 @@ namespace DVJUCSVConverterService
             source = new CancellationTokenSource();
             var token = source.Token;
             serviceWorker = new ServiceWorker(token);
-            serviceWorker.Prepare();
-            _thread = new Thread(new ThreadStart(serviceWorker.Start));
-            _thread.Start();
+            if (serviceWorker.Prepare())
+            {
+                _thread = new Thread(new ThreadStart(serviceWorker.Start));
+                _thread.Start();
+            }
         }
 
         protected override void OnStop()

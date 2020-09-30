@@ -22,13 +22,21 @@ namespace DVJUCSVConverterService
         {
             _token = token;
         }
-        internal void Prepare()
+        internal bool Prepare()
         {
             if ((config = Serializer.DeserializeItem<Config>(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""))) == null)
             {
                 config = Config.GetDefaultConfig();
                 Serializer.SerializeItem(config, Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""));
+                logger = new FileLogger(config.LogPath);
+                LogWriter.InitializeLogger(logger);
+                LogWriter.LogMessage("Please configure a config. Do not move it.");
+                Stop();
+                return false;
             }
+            Directory.CreateDirectory(config.InputPath);
+            Directory.CreateDirectory(config.LogPath);
+            Directory.CreateDirectory(config.OutputFolder);
             logger = new FileLogger(config.LogPath);
             LogWriter.InitializeLogger(logger);
             try
@@ -37,17 +45,19 @@ namespace DVJUCSVConverterService
                 if (processedFiles == null)
                     processedFiles = new List<string>();
                 converter = new CSVOperator();
+                return true;
             }
             catch (Exception e)
             {
                 LogWriter.LogMessage(e.Message);
                 LogWriter.LogMessage(e.StackTrace);
+                return false;
             }
         }
         internal void Start()
         {
             try
-            {                
+            {
                 while (!_token.IsCancellationRequested)
                 {
                     LogWriter.LogMessage($"Checking files in {config.InputPath}");
@@ -57,22 +67,23 @@ namespace DVJUCSVConverterService
                     LogWriter.LogMessage("Files to process: " + string.Join(",\r\n", files));
                     if (files.Count >= config.BatchSize)
                     {
-                        List<Task> tasks = new List<Task>();                        
+                        List<Task> tasks = new List<Task>();
                         foreach (List<string> batch in files.SplitList(config.BatchSize).Where(w => w.Count() == config.BatchSize))
                         {
                             Task task = new Task(() => converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), config.DPI));
                             tasks.Add(task);
-                            task.Start();                            
+                            task.Start();
                             try
                             {
-                                task.Wait();                          
-                                processedFiles.AddRange(batch);
+                                task.Wait();
+                                if (task.IsCompleted)
+                                    processedFiles.AddRange(batch);
                                 Serializer.SerializeItem(processedFiles, config.ProcessedCSVs);
                             }
                             catch (Exception)
                             {
                                 LogWriter.LogMessage(task.Exception.Message + "\r\n" + task.Exception.InnerException.Message + "\r\n" + task.Exception.InnerException.StackTrace);
-                            }  
+                            }
                         }
                         Task.WaitAll(tasks.ToArray());
                     }
@@ -100,7 +111,7 @@ namespace DVJUCSVConverterService
             catch (Exception ex)
             {
                 LogWriter.LogMessage(ex.Message);
-                LogWriter.LogMessage(ex.StackTrace);                
+                LogWriter.LogMessage(ex.StackTrace);
             }
         }
         internal void Stop()

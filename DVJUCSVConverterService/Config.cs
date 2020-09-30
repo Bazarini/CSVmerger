@@ -69,11 +69,8 @@ namespace DVJUCSVConverterService
         {
             string rootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BTI Technologies");
             string inputPath = Path.Combine(rootPath, "Input");
-            Directory.CreateDirectory(inputPath);
             string outputPath = Path.Combine(rootPath, "Output");
-            Directory.CreateDirectory(outputPath);
             string logPath = Path.Combine(rootPath, "Logs");
-            Directory.CreateDirectory(logPath);
             return new Config()
             {
                 DPI = 150,

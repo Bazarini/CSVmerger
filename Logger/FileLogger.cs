@@ -72,5 +72,20 @@ namespace Logger
                 disposedValue = true;
             }
         }
+        public override void SaveLog()
+        {
+            string latestLogFile = ((FileStream)latestLogWriter.BaseStream).Name;
+            string currentLogFile = ((FileStream)latestLogWriter.BaseStream).Name;
+
+            latestLogWriter.BaseStream.Dispose();
+            var newLatestStream = new FileStream(latestLogFile, FileMode.Append, FileAccess.Write);
+            latestLogWriter.BaseStream.Dispose();
+            latestLogWriter = new StreamWriter(newLatestStream);
+            
+            currentLogWriter.BaseStream.Dispose();
+            var newCurrentStream = new FileStream(currentLogFile, FileMode.Append, FileAccess.Write);
+            currentLogWriter.Dispose();
+            currentLogWriter = new StreamWriter(newCurrentStream);
+        }
     }
 }

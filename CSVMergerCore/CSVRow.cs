@@ -74,7 +74,7 @@ namespace CSVMergerCore
         public object Clone()
         {
             CSVRow output = new CSVRow();
-            output.Content = Content;
+            output.Content = new Dictionary<string, string>(Content);
             return output;
         }
 

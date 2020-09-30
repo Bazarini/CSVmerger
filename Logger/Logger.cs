@@ -61,6 +61,10 @@ namespace Logger
         {
             _sessionEvents = new List<LogEvent>();
         }
+        public virtual void SaveLog()
+        {
+
+        }
 
     }
 }

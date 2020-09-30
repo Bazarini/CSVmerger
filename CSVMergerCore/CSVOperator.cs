@@ -23,11 +23,13 @@ namespace CsvMerger
             {
                 for (int i = 0; i < paths.Length; i++)
                 {
+                    int j = i;
+                    LogWriter.LogMessage($"{i} of {paths.Length}");
                     Task task = new Task(() =>
                    {
-                       LogWriter.LogMessage($"{i} of {paths.Length}");
-                       LogWriter.LogMessage($"Reading file {paths[i]}");
-                       CSVDocument csvDocument = CSVDocument.FromFile(paths[i]);
+                       LogWriter.LogMessage($"{j} of {paths.Length} in task");
+                       LogWriter.LogMessage($"Reading file {paths[j]}");
+                       CSVDocument csvDocument = CSVDocument.FromFile(paths[j]);
                        CSVRow anyRow = csvDocument.Rows[0];
                        var pagePaths = csvDocument.Rows.Select(s => s.PathToPDF); //Paths to PDF documents within one csv
                        foreach (var pagePath in pagePaths)
@@ -44,8 +46,12 @@ namespace CsvMerger
                        createDJVU.Start();
                        createDJVU.Wait();
                        CSVRow DJVUFullDocument = (CSVRow)anyRow.Clone(); //Template for djvu
+                       LogWriter.LogMessage(anyRow.PathToPDF);
+                       LogWriter.LogMessage(DJVUFullDocument.PathToPDF);                       
                        DJVUFullDocument.Content["PAGES"] = "0";
                        DJVUFullDocument.PathToPDF = outputDJVUPath;
+                       LogWriter.LogMessage(anyRow.PathToPDF);
+                       LogWriter.LogMessage(DJVUFullDocument.PathToPDF);
                        LogWriter.LogMessage("Adding a row with DJVUDocument");
                        LogWriter.LogMessage(string.Join(";", DJVUFullDocument.Keys) + "\r\n" + string.Join(";", DJVUFullDocument.Values));
                        csvDocument.Add(DJVUFullDocument); //Add DJVU to csv
@@ -54,10 +60,10 @@ namespace CsvMerger
                            mergedCSV.Add(csvDocument); // Add csv to list of all csvs.
                        }
                    });
-                    tasks[i] = task;
+                    tasks[j] = task;
                     task.Start();
                 }
-                Task.WaitAll(tasks);
+                Task.WaitAll(tasks);           
                 using (StreamWriter writer = new StreamWriter(outputFile, false)) //Write all csv's with djvu to output "Merged" csv
                 {
                     LogWriter.LogMessage($"Opening file {outputFile} to write.");

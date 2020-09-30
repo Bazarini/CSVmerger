@@ -51,7 +51,7 @@ namespace CSVMergerCore
                     throw new Exception($"File {filePath} rows are split incorrectly");
                 Dictionary<string, string> contents = lineHeaders.Zip(lineContents, (h, m) => new { h, m }).ToDictionary(item => item.h, item => item.m);
                 CSVRow row = new CSVRow(contents);
-                output.Rows.Add(row);
+                output.Add(row);
             }
             return output;
         }
