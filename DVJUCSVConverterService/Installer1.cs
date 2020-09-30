@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace DVJUCSVConverterService
 {
     [RunInstaller(true)]
-    public partial class Installer1 : System.Configuration.Install.Installer
+    public partial class Installer1 : Installer
     {
         ServiceInstaller serviceInstaller;
         ServiceProcessInstaller processInstaller;
@@ -22,7 +22,9 @@ namespace DVJUCSVConverterService
 
             processInstaller.Account = ServiceAccount.LocalSystem;
             serviceInstaller.StartType = ServiceStartMode.Manual;
-            serviceInstaller.ServiceName = "CSVConverter";
+            serviceInstaller.ServiceName = "docAlpha_DocProf_Converter";
+            serviceInstaller.Description = "Prepares a merged *.csv and *.djvu files from docAlpha output csv and pdf files";
+            serviceInstaller.StartType = ServiceStartMode.Automatic;
             Installers.Add(processInstaller);
             Installers.Add(serviceInstaller);
         }

@@ -73,8 +73,10 @@ namespace CSVMergerCore
         #endregion
         public object Clone()
         {
-            CSVRow output = new CSVRow();
-            output.Content = new Dictionary<string, string>(Content);
+            CSVRow output = new CSVRow
+            {
+                Content = new Dictionary<string, string>(Content)
+            };
             return output;
         }
 

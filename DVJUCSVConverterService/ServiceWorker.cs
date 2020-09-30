@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,10 +27,6 @@ namespace DVJUCSVConverterService
             {
                 config = Config.GetDefaultConfig();
                 Serializer.SerializeItem(config, Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""));
-                logger = new FileLogger(config.LogPath);
-                LogWriter.InitializeLogger(logger);
-                LogWriter.LogMessage("Please configure a config. Do not move it.");
-                Stop();
                 return false;
             }
             Directory.CreateDirectory(config.InputPath);
@@ -68,7 +63,7 @@ namespace DVJUCSVConverterService
                     if (files.Count >= config.BatchSize)
                     {
                         List<Task> tasks = new List<Task>();
-                        foreach (List<string> batch in files.SplitList(config.BatchSize).Where(w => w.Count() == config.BatchSize))
+                        foreach (List<string> batch in files.SplitList(config.BatchSize).Where(w => config.TakeLess? w.Count() <= config.BatchSize : w.Count() == config.BatchSize))
                         {
                             Task task = new Task(() => converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), config.DPI));
                             tasks.Add(task);

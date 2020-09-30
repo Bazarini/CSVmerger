@@ -1,18 +1,4 @@
-﻿using Logger;
-using PDFToDJVU;
-using System;
-using CSVMergerCore;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Security.Policy;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using CsvMerger;
+﻿using System.ServiceProcess;
 using System.Threading;
 
 namespace DVJUCSVConverterService
@@ -23,7 +9,7 @@ namespace DVJUCSVConverterService
         CancellationTokenSource source;
         public CSVConverter()
         {
-            InitializeComponent();            
+            InitializeComponent();
         }
         ServiceWorker serviceWorker;
         protected override void OnStart(string[] args)
@@ -31,18 +17,21 @@ namespace DVJUCSVConverterService
             source = new CancellationTokenSource();
             var token = source.Token;
             serviceWorker = new ServiceWorker(token);
+            _thread = new Thread(new ThreadStart(serviceWorker.Start));
             if (serviceWorker.Prepare())
             {
-                _thread = new Thread(new ThreadStart(serviceWorker.Start));
                 _thread.Start();
-            }
+            }            
         }
 
         protected override void OnStop()
         {
-            source.Cancel();
-            _thread.Join(25 * 1000);            
-            _thread = null;
+            if (_thread.IsAlive)
+            {
+                source.Cancel();
+                _thread.Join(25 * 1000);
+                _thread = null;
+            }
         }
     }
 }

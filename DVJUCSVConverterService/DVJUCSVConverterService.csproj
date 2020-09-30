@@ -35,6 +35,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'MyRelease|AnyCPU'">
+    <OutputPath>bin\MyRelease\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Logger">
       <HintPath>..\..\CSVmerger\Logger\bin\Debug\Logger.dll</HintPath>

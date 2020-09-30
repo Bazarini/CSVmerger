@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -14,6 +13,13 @@ namespace DVJUCSVConverterService
         private int _batchSize;
         private int _timeout;
         private string _outputFolder;
+        private bool _takeLess;
+
+        public bool TakeLess
+        {
+            get { return _takeLess; }
+            set { _takeLess = value; }
+        }
 
         public string OutputFolder
         {
@@ -59,6 +65,7 @@ namespace DVJUCSVConverterService
             info.AddValue("BatchSize", _batchSize, typeof(int));
             info.AddValue("Timeout", _timeout, typeof(int));
             info.AddValue("OutputFolder", _outputFolder, typeof(string));
+            info.AddValue("TakeLess", _takeLess, typeof(bool));
         }
         public Config()
         {
@@ -79,7 +86,8 @@ namespace DVJUCSVConverterService
                 ProcessedCSVs = Path.Combine(logPath, "ProcessedCSVs.log"),
                 Timeout = 240 * 1000,
                 BatchSize = 50,
-                OutputFolder = outputPath                
+                OutputFolder = outputPath,
+                TakeLess = true
             };
         }
 

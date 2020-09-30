@@ -1,11 +1,6 @@
 ﻿using Logger;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -21,7 +16,7 @@ namespace PDFToDJVU
             string exe = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), @"Binaries\pdf2djvu.exe").Replace("file:\\","");
             Process process = new Process() { StartInfo = { FileName = exe, Arguments = args } };
             Task task = new Task(() => { process.Start(); process.WaitForExit(); });
-            LogWriter.LogMessage($"Trying to start: {exe}\r\nwith arument:\r\n{args}");
+            LogWriter.LogMessage($"Attempting to start: {exe}\r\nwith arument:\r\n{args}");
             task.Start();
             while (!task.IsCompleted)
             {
