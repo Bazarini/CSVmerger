@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Logger;
+using System;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -14,6 +15,30 @@ namespace DVJUCSVConverterService
         private int _timeout;
         private string _outputFolder;
         private bool _takeLess;
+        private int _maxParallelsPerBatch;
+        private int _maxBatchesParallel;
+        private LogDepth _logLevel;
+
+        public LogDepth LogLevel
+        {
+            get { return _logLevel; }
+            set { _logLevel = value; }
+        }
+
+
+        public int MaxBatchesParallel
+        {
+            get { return _maxBatchesParallel; }
+            set { _maxBatchesParallel = value; }
+        }
+
+
+        public int MaxParallelsPerBatch
+        {
+            get { return _maxParallelsPerBatch; }
+            set { _maxParallelsPerBatch = value; }
+        }
+
 
         public bool TakeLess
         {
@@ -63,9 +88,12 @@ namespace DVJUCSVConverterService
             info.AddValue("DPI", _dpi, typeof(int));
             info.AddValue("ProcessedCSVs", _processedCSVs, typeof(string));
             info.AddValue("BatchSize", _batchSize, typeof(int));
+            info.AddValue("MaxParallelsPerBatch", _maxParallelsPerBatch, typeof(int));
+            info.AddValue("MaxBatchesParallel", _maxBatchesParallel, typeof(int));
             info.AddValue("Timeout", _timeout, typeof(int));
             info.AddValue("OutputFolder", _outputFolder, typeof(string));
             info.AddValue("TakeLess", _takeLess, typeof(bool));
+            info.AddValue("LogLevel", _logLevel, typeof(LogDepth));
         }
         public Config()
         {
@@ -87,7 +115,10 @@ namespace DVJUCSVConverterService
                 Timeout = 240 * 1000,
                 BatchSize = 50,
                 OutputFolder = outputPath,
-                TakeLess = true
+                TakeLess = true,
+                MaxBatchesParallel = 5,
+                MaxParallelsPerBatch = 5,
+                LogLevel = LogDepth.Debug
             };
         }
 

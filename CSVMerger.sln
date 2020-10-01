@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30330.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVMerger", "CSVMergerConsole\CSVMerger.csproj", "{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSVMergerTest", "CSVMergerTest\CSVMergerTest.csproj", "{C897A362-B626-41A1-80F1-7BFCA6054B84}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVMergerCore", "CSVMergerCore\CSVMergerCore.csproj", "{CD415B43-00D8-4499-902B-CF6B3CCFF438}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logger", "Logger\Logger.csproj", "{26A29842-D109-497E-BE9A-2DB888B2FB90}"
@@ -22,16 +18,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}.MyRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CD8F1FB2-2119-4FC0-A436-94FE7819BEB3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C897A362-B626-41A1-80F1-7BFCA6054B84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C897A362-B626-41A1-80F1-7BFCA6054B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C897A362-B626-41A1-80F1-7BFCA6054B84}.MyRelease|Any CPU.ActiveCfg = Release|Any CPU
-		{C897A362-B626-41A1-80F1-7BFCA6054B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C897A362-B626-41A1-80F1-7BFCA6054B84}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CD415B43-00D8-4499-902B-CF6B3CCFF438}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CD415B43-00D8-4499-902B-CF6B3CCFF438}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD415B43-00D8-4499-902B-CF6B3CCFF438}.MyRelease|Any CPU.ActiveCfg = MyRelease|Any CPU

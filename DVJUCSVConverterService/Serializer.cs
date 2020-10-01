@@ -26,7 +26,8 @@ namespace DVJUCSVConverterService
             }
             catch (Exception ex)
             {
-                LogWriter.LogMessage(ex.StackTrace);
+                LogWriter.LogMessage(ex.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(ex.StackTrace, LogDepth.Debug);
                 return false;
             }
         }
@@ -47,8 +48,8 @@ namespace DVJUCSVConverterService
             }
             catch (Exception ex)
             {
-                LogWriter.LogMessage(ex.Message);
-                LogWriter.LogMessage(ex.StackTrace);
+                LogWriter.LogMessage(ex.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(ex.StackTrace, LogDepth.Debug);
                 throw;
             }
             

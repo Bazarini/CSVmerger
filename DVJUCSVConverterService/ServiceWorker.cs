@@ -33,7 +33,7 @@ namespace DVJUCSVConverterService
             Directory.CreateDirectory(config.LogPath);
             Directory.CreateDirectory(config.OutputFolder);
             logger = new FileLogger(config.LogPath);
-            LogWriter.InitializeLogger(logger);
+            LogWriter.AddLogger(logger, config.LogLevel);
             try
             {
                 processedFiles = Serializer.DeserializeItem<List<string>>(config.ProcessedCSVs);
@@ -44,8 +44,8 @@ namespace DVJUCSVConverterService
             }
             catch (Exception e)
             {
-                LogWriter.LogMessage(e.Message);
-                LogWriter.LogMessage(e.StackTrace);
+                LogWriter.LogMessage(e.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(e.StackTrace, LogDepth.Debug);
                 return false;
             }
         }
@@ -55,18 +55,28 @@ namespace DVJUCSVConverterService
             {
                 while (!_token.IsCancellationRequested)
                 {
-                    LogWriter.LogMessage($"Checking files in {config.InputPath}");
+                    LogWriter.LogMessage($"Checking files in {config.InputPath}", LogDepth.UserLevel);
                     List<string> Allfiles = Directory.GetFiles(config.InputPath, "*.csv").ToList();
-                    LogWriter.LogMessage("Found files: " + string.Join(",\r\n", Allfiles));
+                    LogWriter.LogMessage("Found files: " + string.Join(",\r\n", Allfiles), LogDepth.UserLevel);
                     List<string> files = Allfiles.Where(w => !processedFiles.Contains(w)).ToList();
-                    LogWriter.LogMessage("Files to process: " + string.Join(",\r\n", files));
+                    LogWriter.LogMessage("Files to process: " + string.Join(",\r\n", files), LogDepth.UserLevel);
                     if (files.Count >= config.BatchSize)
                     {
-                        
-                        Parallel.ForEach(files.SplitList(config.BatchSize).Where(w => config.TakeLess ? w.Count() <= config.BatchSize : w.Count() == config.BatchSize), batch =>
+
+                        Parallel.ForEach(
+                            files
+                            .SplitList(config.BatchSize)
+                            .Where(w => config.TakeLess ? w.Count() <= config.BatchSize : w.Count() == config.BatchSize)
+                            , new ParallelOptions()
+                            {
+                                MaxDegreeOfParallelism = config.MaxBatchesParallel
+                            },
+                            batch =>
                         {
                             _token.Register(converter.Endloop);
-                            if (converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), config.DPI))
+
+                            LogWriter.LogMessage("Starting parallel for batch", LogDepth.Debug);
+                            if (converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), maxParallels: config.MaxParallelsPerBatch, dpi: config.DPI))
                             {
                                 processedFiles.AddRange(batch);
                                 Serializer.SerializeItem(processedFiles, config.ProcessedCSVs);
@@ -75,34 +85,29 @@ namespace DVJUCSVConverterService
                     }
                     else
                     {
-                        LogWriter.LogMessage($"Not enough files: {files.Count} from {config.BatchSize}");
+                        LogWriter.LogMessage($"Not enough files: {files.Count} from {config.BatchSize}", LogDepth.UserLevel);
                     }
                     int i = 0;
 
                     while (!_token.IsCancellationRequested && i < config.Timeout / 1000)
                     {
                         i++;
-                        LogWriter.LogMessage("Sleeping");
+                        LogWriter.LogMessage("Sleeping", LogDepth.Debug);
                         Thread.Sleep(1000);
                     }
 
                 }
-                Stop();
             }
             catch (FileNotFoundException ex)
             {
-                LogWriter.LogMessage(ex.Message);
-                LogWriter.LogMessage(ex.StackTrace);
+                LogWriter.LogMessage(ex.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(ex.StackTrace, LogDepth.Debug);
             }
             catch (Exception ex)
             {
-                LogWriter.LogMessage(ex.Message);
-                LogWriter.LogMessage(ex.StackTrace);
+                LogWriter.LogMessage(ex.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(ex.StackTrace, LogDepth.Debug);
             }
-        }
-        internal void Stop()
-        {
-            LogWriter.Dispose();
         }
     }
 }

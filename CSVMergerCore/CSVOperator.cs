@@ -14,21 +14,22 @@ namespace CsvMerger
     public class CSVOperator
     {
         CancellationTokenSource cancellationTokenSource;
-        public bool AddDJVUToCSV(string[] paths, string outputFile, int dpi = 250) //Gets the list of CSV files, adds djvu document and merges all csvs to output file.
+        public bool AddDJVUToCSV(string[] paths, string outputFile, int maxParallels, int dpi = 250) //Gets the list of CSV files, adds djvu document and merges all csvs to output file.
         {
             List<CSVDocument> mergedCSV = new List<CSVDocument>();
-            List<Task> tasks = new List<Task>();
             try
             {
                 cancellationTokenSource = new CancellationTokenSource();
                 var token = cancellationTokenSource.Token;
-                Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = 4, CancellationToken = token }, file =>
+                Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = maxParallels, CancellationToken = token }, file =>
                 {
-                    mergedCSV.Add(PrepareCSVWithDJVU(file, dpi, cancellationTokenSource)); // Add csv to list of all csvs.
+                    LogWriter.LogMessage($"Starting parallel for {file}", LogDepth.Debug);
+                    mergedCSV.Add(AddDJVUToCsv(file, dpi, cancellationTokenSource)); // Add csv to list of all csvs.
                 });
                 string content = "";
-                LogWriter.LogMessage($"Opening file {outputFile} to write.");
+                LogWriter.LogMessage($"Opening file {outputFile} to write.", LogDepth.UserLevel);
                 content += mergedCSV[0].HeadersToString(); //Write headers
+                
                 foreach (var document in mergedCSV)
                 {
                     foreach (CSVRow page in document.Rows.OrderBy(o => int.Parse(o.Content["PAGES"]))) //Sort rows in each csv (djvu should be on a first place with PAGES = 0)
@@ -46,16 +47,16 @@ namespace CsvMerger
             }
             catch (Exception e)
             {
-                LogWriter.LogMessage(e.Message);
-                LogWriter.LogMessage(e.StackTrace);
+                LogWriter.LogMessage(e.Message, LogDepth.UserLevel);
+                LogWriter.LogMessage(e.StackTrace, LogDepth.Debug);
                 if (e.InnerException != null)
                 {
-                    LogWriter.LogMessage(e.InnerException.Message);
-                    LogWriter.LogMessage(e.InnerException.StackTrace);
+                    LogWriter.LogMessage(e.InnerException.Message, LogDepth.UserLevel);
+                    LogWriter.LogMessage(e.InnerException.StackTrace, LogDepth.Debug);
                     if (e.InnerException.InnerException != null)
                     {
-                        LogWriter.LogMessage(e.InnerException.InnerException.Message);
-                        LogWriter.LogMessage(e.InnerException.InnerException.StackTrace);
+                        LogWriter.LogMessage(e.InnerException.InnerException.Message, LogDepth.UserLevel);
+                        LogWriter.LogMessage(e.InnerException.InnerException.StackTrace, LogDepth.Debug);
                     }
                 }
                 return false;
@@ -66,11 +67,11 @@ namespace CsvMerger
             cancellationTokenSource.Cancel();
         }
 
-        private CSVDocument PrepareCSVWithDJVU(string file, int requestedDPI, CancellationTokenSource source)
+        private CSVDocument AddDJVUToCsv(string file, int requestedDPI, CancellationTokenSource source)
         {
             try
             {
-                LogWriter.LogMessage($"Reading file {file}");
+                LogWriter.LogMessage($"Reading file {file}", LogDepth.UserLevel);
                 CSVDocument csvDocument = CSVDocument.FromFile(file);
                 CSVRow anyRow = csvDocument.Rows[0];
                 var pagePaths = csvDocument.Rows.Select(s => s.PathToPDF); //Paths to PDF documents within one csv
@@ -85,7 +86,7 @@ namespace CsvMerger
                 var outputDJVUPath = regex.Replace(pagePaths.FirstOrDefault(), ".djvu"); //Form djvu name/path from the first PDF name (document-0001.pdf => document.djvu)   
                 try
                 {
-                    PDFToDJVU.Executor.Convert(pagePaths.ToArray(), outputDJVUPath, source.Token, requestedDPI); // Convert pdfs to djvu
+                    PDFToDJVU.Executor.Convert(pagePaths.ToArray(), outputDJVUPath, source, requestedDPI); // Convert pdfs to djvu
                 }
                 catch (Exception)
                 {
@@ -94,13 +95,13 @@ namespace CsvMerger
                 CSVRow DJVUFullDocument = (CSVRow)anyRow.Clone(); //Template for djvu
                 DJVUFullDocument.Content["PAGES"] = "0";
                 DJVUFullDocument.PathToPDF = outputDJVUPath;
-                LogWriter.LogMessage($"Adding a row with DJVUDocument {outputDJVUPath}");
+                LogWriter.LogMessage($"Adding a row with DJVUDocument {outputDJVUPath}", LogDepth.UserLevel);
                 csvDocument.Add(DJVUFullDocument); //Add DJVU to csv
                 return csvDocument;
             }
             catch (FileNotFoundException ex)
             {
-                LogWriter.LogMessage($"{ex.Message}: {ex.FileName}");
+                LogWriter.LogMessage($"{ex.Message}: {ex.FileName}", LogDepth.UserLevel);
                 throw;
             }
         }

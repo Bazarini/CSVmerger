@@ -1,21 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Logger
 {
+    public enum LogDepth
+    {
+        None = 0,
+        CriticalErrors = 1,
+        UserLevel = 2,
+        Default = 3,
+        Debug = 5,
+    }
     public static class LogWriter
     {
-        static List<Logger> _loggers;
-        public static void LogMessage(string message)
+        static Dictionary<Logger, LogDepth> _loggers;
+        public static void LogMessage(string message, LogDepth LogDepth = LogDepth.Default)
+
         {
-            Parallel.ForEach(_loggers, logger => logger.LogMessage(message));
+            Parallel.ForEach(_loggers, logger =>
+            {
+
+                if (LogDepth <= logger.Value)
+                    logger.Key.LogMessage(message);
+            });
         }
-        public static void AddLogger(Logger logger)
+        public static void AddLogger(Logger logger, LogDepth logLevel)
         {
             if (_loggers == null)
-                _loggers = new List<Logger>();
-            _loggers.Add(logger);
+                _loggers = new Dictionary<Logger, LogDepth>();
+            _loggers.Add(logger, logLevel);
         }
     }
 }
