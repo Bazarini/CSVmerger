@@ -73,11 +73,12 @@ namespace DVJUCSVConverterService
                             },
                             batch =>
                         {
-                            _token.Register(converter.Endloop);
+                            var batchEndRegistration = _token.Register(converter.Endloop);
 
                             LogWriter.LogMessage("Starting parallel for batch", LogDepth.Debug);
                             if (converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), maxParallels: config.MaxParallelsPerBatch, dpi: config.DPI))
                             {
+                                batchEndRegistration.Dispose();
                                 processedFiles.AddRange(batch);
                                 Serializer.SerializeItem(processedFiles, config.ProcessedCSVs);
                             }

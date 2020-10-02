@@ -14,6 +14,7 @@ namespace CSVMergerCore
         public int ID { get; private set; }
         public List<string> Files { get; private set; }
 
+        #region IList methods
         public int Count => Files.Count;
 
         public bool IsReadOnly => ((ICollection<string>)Files).IsReadOnly;
@@ -67,5 +68,6 @@ namespace CSVMergerCore
         {
             return Files.GetEnumerator();
         }
+        #endregion
     }
 }

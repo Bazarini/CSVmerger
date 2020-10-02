@@ -90,7 +90,8 @@ namespace CsvMerger
                 }
                 catch (Exception)
                 {
-                    source.Cancel();                    
+                    source.Cancel();
+                    throw;
                 }
                 CSVRow DJVUFullDocument = (CSVRow)anyRow.Clone(); //Template for djvu
                 DJVUFullDocument.Content["PAGES"] = "0";
@@ -102,6 +103,11 @@ namespace CsvMerger
             catch (FileNotFoundException ex)
             {
                 LogWriter.LogMessage($"{ex.Message}: {ex.FileName}", LogDepth.UserLevel);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                LogWriter.LogMessage(ex.Message, LogDepth.Debug);
                 throw;
             }
         }

@@ -18,11 +18,15 @@ namespace PDFToDJVU
                 args += $" \"{page}\"";
             string exe = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), @"Binaries\pdf2djvu.exe").Replace("file:\\", "");
             Process process = new Process() { StartInfo = { FileName = exe, Arguments = args } };
-            source.Token.Register(() => process.Kill());
+            var processStartRegistration = source.Token.Register(() => process.Kill());
             Task task = new Task(() => 
             {                
                 process.Start();
+                LogWriter.LogMessage($"process with ID {process.Id} is started.", LogDepth.Debug);
                 process.WaitForExit();
+                LogWriter.LogMessage($"process with ID {process.Id} ended.", LogDepth.Debug);
+                processStartRegistration.Dispose();
+
             });            
             LogWriter.LogMessage($"Attempting to start: {exe}\r\nwith arument:\r\n{args}", LogDepth.Debug);
             task.Start();

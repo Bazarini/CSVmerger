@@ -39,9 +39,6 @@
     <OutputPath>bin\MyRelease\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Logger">
-      <HintPath>..\Logger\bin\Debug\Logger.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
@@ -80,6 +77,10 @@
     <ProjectReference Include="..\CSVMergerCore\CSVMergerCore.csproj">
       <Project>{cd415b43-00d8-4499-902b-cf6b3ccff438}</Project>
       <Name>CSVMergerCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Logger\Logger.csproj">
+      <Project>{26a29842-d109-497e-be9a-2db888b2fb90}</Project>
+      <Name>Logger</Name>
     </ProjectReference>
     <ProjectReference Include="..\PDFToDJVU\PDFToDJVU.csproj">
       <Project>{3da360c6-6ceb-4a1d-9014-b3f9ec975a26}</Project>
