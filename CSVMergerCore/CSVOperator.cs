@@ -75,18 +75,19 @@ namespace CsvMerger
                 CSVDocument csvDocument = CSVDocument.FromFile(file);
                 CSVRow anyRow = csvDocument.Rows[0];
                 var pagePaths = csvDocument.Rows.Select(s => s.PathToPDF); //Paths to PDF documents within one csv
+                var imagesForDJVU = csvDocument.Rows.Select(s => s.Content["DJVUIMAGES"]); //Paths to PDF documents within one csv
                 foreach (var pagePath in pagePaths)
                 {
                     if (!File.Exists(pagePath))
                     {
-                        throw new FileNotFoundException("File not found", file);
+                        throw new FileNotFoundException("File not found", pagePath);
                     }
                 }
                 Regex regex = new Regex("[-][0-9]{4}[.]pdf");
                 var outputDJVUPath = regex.Replace(pagePaths.FirstOrDefault(), ".djvu"); //Form djvu name/path from the first PDF name (document-0001.pdf => document.djvu)   
                 try
                 {
-                    PDFToDJVU.Executor.Convert(pagePaths.ToArray(), outputDJVUPath, source, requestedDPI); // Convert pdfs to djvu
+                    PDFToDJVU.Executor.Convert(imagesForDJVU.ToArray(), outputDJVUPath, source, requestedDPI); // Convert pdfs to djvu
                 }
                 catch (Exception)
                 {

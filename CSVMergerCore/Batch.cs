@@ -9,7 +9,7 @@ namespace CSVMergerCore
 {
     class Batch : IList<string>
     {
-        public string this[int index] { get => (Files)[index]; set => (Files)[index] = value; }
+        public string this[int index] { get => Files[index]; set => Files[index] = value; }
 
         public int ID { get; private set; }
         public List<string> Files { get; private set; }

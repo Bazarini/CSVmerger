@@ -13,7 +13,7 @@ namespace CSVMergerCore
         public IEnumerable<string> Headers { get; private set; }
         public string HeadersToString()
         {
-            return string.Join(";", Headers);
+            return string.Join(";", Headers.Where(w => w != "DJVUIMAGES"));
         }
         #region IList props
         public int Count => Rows.Count;

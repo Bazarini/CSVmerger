@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CSVMergerCore
 {
@@ -39,7 +40,7 @@ namespace CSVMergerCore
         }
         public override string ToString()
         {
-            return string.Join(";", Content.Values);
+            return string.Join(";", Content.Values.Where(w => w != Content["DJVUIMAGES"]));
         }
         #region IDictionary methods
         public bool Contains(object key)

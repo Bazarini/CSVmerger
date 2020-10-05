@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BatchObserver.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="CSVConverter.cs">
       <SubType>Component</SubType>
