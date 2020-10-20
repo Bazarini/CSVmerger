@@ -14,34 +14,39 @@ namespace DVJUCSVConverterService
     internal class ServiceWorker
     {
         CancellationToken _token;
-        List<string> processedFiles;
-        List<string> FilesInProcess;
-        Config config;
-        FileLogger logger;
-        CSVOperator converter;
+        List<string> _processedFiles;
+        List<string> _filesInProcess;
+        Config _config;
+        FileLogger _logger;
+        FileLogger _userLogger;
+        CSVOperator _converter;
         public ServiceWorker(CancellationToken token)
         {
             _token = token;
         }
         internal bool Prepare()
         {
-            if ((config = Serializer.DeserializeItem<Config>(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""))) == null)
+            if ((_config = Serializer.DeserializeItem<Config>(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""))) == null)
             {
-                config = Config.GetDefaultConfig();
-                Serializer.SerializeItem(config, Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""));
+                _config = Config.GetDefaultConfig();
+                Serializer.SerializeItem(_config, Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase), "config.config").Replace("file:\\", ""));
                 return false;
             }
-            Directory.CreateDirectory(config.InputPath);
-            Directory.CreateDirectory(config.LogPath);
-            Directory.CreateDirectory(config.OutputFolder);
-            logger = new FileLogger(config.LogPath);
-            LogWriter.AddLogger(logger, config.LogLevel);
+            Directory.CreateDirectory(_config.InputPath);
+            Directory.CreateDirectory(_config.LogPath);
+            Directory.CreateDirectory(_config.OutputFolder);
+            Directory.CreateDirectory(_config.UserLogFolder);
+            _logger = new FileLogger(_config.LogPath);
+            _userLogger = new FileLogger(_config.UserLogFolder);
+            _filesInProcess = new List<string>();
+            LogWriter.AddLogger(_logger, _config.LogLevel);
+            LogWriter.AddLogger(_userLogger, LogDepth.UserLevel);
             try
             {
-                processedFiles = Serializer.DeserializeItem<List<string>>(config.ProcessedCSVs);
-                if (processedFiles == null)
-                    processedFiles = new List<string>();
-                converter = new CSVOperator();
+                _processedFiles = Serializer.DeserializeItem<List<string>>(_config.ProcessedCSVs);
+                if (_processedFiles == null)
+                    _processedFiles = new List<string>();
+                _converter = new CSVOperator();
                 return true;
             }
             catch (Exception e)
@@ -53,58 +58,59 @@ namespace DVJUCSVConverterService
         }
         internal void Start()
         {
-#if DEBUG
-            Thread.Sleep(15000);
-#endif
             try
             {
-                FilesInProcess = new List<string>();
                 while (!_token.IsCancellationRequested)
                 {
-                    LogWriter.LogMessage($"Checking files in {config.InputPath}", LogDepth.UserLevel);
-                    List<string> Allfiles = Directory.GetFiles(config.InputPath, "*.csv").ToList();
+                    LogWriter.LogMessage($"Checking files in {_config.InputPath}", LogDepth.UserLevel);
+                    List<string> Allfiles = Directory.GetFiles(_config.InputPath, "*.csv").ToList();
                     LogWriter.LogMessage("Found files: " + string.Join(",\r\n", Allfiles), LogDepth.UserLevel);
-                    List<string> files = Allfiles.Where(w => !processedFiles.Contains(w) && !FilesInProcess.Contains(w)).ToList();
+                    List<string> files = Allfiles.Where(w => !_processedFiles.Contains(w) && !_filesInProcess.Contains(w)).ToList();
                     LogWriter.LogMessage("Files to process: " + string.Join(",\r\n", files), LogDepth.UserLevel);
-                    if (files.Count >= config.BatchSize)
+                    if (files.Count >= _config.BatchSize || (_config.TakeLess && files.Count > 0))
                     {
 
                         Parallel.ForEach(
                             files
-                            .SplitList(config.BatchSize)
-                            .Where(w => config.TakeLess ? w.Count() <= config.BatchSize : w.Count() == config.BatchSize)
-                            , new ParallelOptions()
+                            .SplitList(_config.BatchSize)
+                            .Where(w =>
                             {
-                                MaxDegreeOfParallelism = config.MaxBatchesParallel
+                                if (_config.TakeLess)
+                                    return true;
+                                else
+                                    return w.Count <= _config.BatchSize;
+                            }), new ParallelOptions()
+                            {
+                                MaxDegreeOfParallelism = _config.MaxBatchesParallel
                             },
                             batch =>
                         {
-                            var batchEndRegistration = _token.Register(converter.Endloop);
+                            var batchEndRegistration = _token.Register(_converter.Endloop);
 
-                            LogWriter.LogMessage("Starting parallel for batch", LogDepth.Debug);
+                            LogWriter.LogMessage("Start parallel for batch", LogDepth.Debug);
                             Stopwatch watch = new Stopwatch();
                             watch.Start();
-                            if (converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), maxParallels: config.MaxParallelsPerBatch, dpi: config.DPI))
+                            if (_converter.AddDJVUToCSV(batch.ToArray(), Path.Combine(_config.OutputFolder, $"{DateTime.Now:dd-MM-yyyy_HHmmss}_{Guid.NewGuid():N}.csv"), maxParallels: _config.MaxParallelsPerBatch, dpi: _config.DPI, _config.ShortestPath))
                             {
-                                batchEndRegistration.Dispose();                                
-                                processedFiles.AddRange(batch);                                
-                                Serializer.SerializeItem(processedFiles, config.ProcessedCSVs);
+                                batchEndRegistration.Dispose();
+                                _processedFiles.AddRange(batch);
+                                Serializer.SerializeItem(_processedFiles, _config.ProcessedCSVs);
                             }
-                            FilesInProcess.RemoveAll(r => batch.Contains(r));
+                            _filesInProcess.RemoveAll(r => batch.Contains(r));
                             watch.Stop();
                             LogWriter.LogMessage($"Batch conversion ended. It took {watch.ElapsedMilliseconds}ms to process {batch.Count} files.", LogDepth.Debug);
                         });
                     }
                     else
                     {
-                        LogWriter.LogMessage($"Not enough files: {files.Count} from {config.BatchSize}", LogDepth.UserLevel);
+                        LogWriter.LogMessage($"Not enough files: Found {files.Count} from needed {_config.BatchSize}", LogDepth.UserLevel);
                     }
                     int i = 0;
 
-                    while (!_token.IsCancellationRequested && i < config.Timeout / 5000)
+                    while (!_token.IsCancellationRequested && i < _config.Timeout / 5000)
                     {
                         i++;
-                        LogWriter.LogMessage("Sleeping", LogDepth.Debug);
+                        LogWriter.LogMessage("Waiting for new files", LogDepth.UserLevel);
                         Thread.Sleep(5000);
                     }
 

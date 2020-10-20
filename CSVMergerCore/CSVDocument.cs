@@ -49,8 +49,10 @@ namespace CSVMergerCore
                 IEnumerable<string> lineContents = lines[i + 1].Split(new[] { separator }, StringSplitOptions.None).Select(s => s.Replace("\"", ""));
                 if (lineHeaders.Count() != lineContents.Count())
                     throw new Exception($"File {filePath} rows are split incorrectly");
-                Dictionary<string, string> contents = lineHeaders.Zip(lineContents, (h, m) => new { h, m }).ToDictionary(item => item.h, item => item.m);
+                Dictionary<string, string> contents = lineHeaders.Zip(lineContents, (h, m) => new { h, m }).ToDictionary(item => item.h, item => item.m);                
                 CSVRow row = new CSVRow(contents);
+                if (!File.Exists(row.PathToPDF))
+                    throw new FileNotFoundException(message: $"File {row.PathToPDF} does not exists", fileName: row.PathToPDF);
                 output.Add(row);
             }
             return output;

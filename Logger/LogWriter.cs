@@ -18,7 +18,6 @@ namespace Logger
     {
         static Dictionary<Logger, LogDepth> _loggers;
         public static void LogMessage(string message, LogDepth LogDepth = LogDepth.Default)
-
         {
             Parallel.ForEach(_loggers, logger =>
             {
@@ -26,12 +25,13 @@ namespace Logger
                 if (LogDepth <= logger.Value)
                     logger.Key.LogMessage(message);
             });
-        }
+        }        
         public static void AddLogger(Logger logger, LogDepth logLevel)
         {
             if (_loggers == null)
                 _loggers = new Dictionary<Logger, LogDepth>();
             _loggers.Add(logger, logLevel);
         }
+        
     }
 }

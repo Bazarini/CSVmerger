@@ -18,6 +18,29 @@ namespace DVJUCSVConverterService
         private int _maxParallelsPerBatch;
         private int _maxBatchesParallel;
         private LogDepth _logLevel;
+        private string _tempFolder;
+        private string _userLogFolder;
+        private string _shortestPath;
+
+        public string ShortestPath
+        {
+            get { return _shortestPath; }
+            set { _shortestPath = value; }
+        }
+
+
+        public string UserLogFolder
+        {
+            get { return _userLogFolder; }
+            set { _userLogFolder = value; }
+        }
+
+
+        public string TempFolder
+        {
+            get { return _tempFolder; }
+            set { _tempFolder = value; }
+        }
 
         public LogDepth LogLevel
         {
@@ -94,10 +117,13 @@ namespace DVJUCSVConverterService
             info.AddValue("OutputFolder", _outputFolder, typeof(string));
             info.AddValue("TakeLess", _takeLess, typeof(bool));
             info.AddValue("LogLevel", _logLevel, typeof(LogDepth));
+            info.AddValue("TempFolder", _tempFolder, typeof(string));
+            info.AddValue("UserLogFolder", _userLogFolder, typeof(string));
+            info.AddValue("ShortestPath", _shortestPath, typeof(string));
         }
         public Config()
         {
-                       
+
         }
 
         internal static Config GetDefaultConfig()
@@ -118,7 +144,9 @@ namespace DVJUCSVConverterService
                 TakeLess = true,
                 MaxBatchesParallel = 5,
                 MaxParallelsPerBatch = 5,
-                LogLevel = LogDepth.Debug
+                LogLevel = LogDepth.Debug,
+                UserLogFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "CSVMerger - Critical errors"),
+                ShortestPath = "C:\\1"
             };
         }
 

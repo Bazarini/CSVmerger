@@ -1,4 +1,5 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.ServiceProcess;
 using System.Threading;
 
 namespace DVJUCSVConverterService
@@ -12,6 +13,11 @@ namespace DVJUCSVConverterService
             InitializeComponent();
         }
         ServiceWorker serviceWorker;
+        internal void TestStartUpAndStop(string[] args)
+        {
+            OnStart(args);
+            Console.Read();
+        }
         protected override void OnStart(string[] args)
         {
             source = new CancellationTokenSource();
